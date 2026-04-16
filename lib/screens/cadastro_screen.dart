@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'patos_screen.dart';
 
 class CadastroScreen extends StatefulWidget {
   const CadastroScreen({super.key});
@@ -20,6 +21,15 @@ class _CadastroScreenState extends State<CadastroScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cadastro realizado com sucesso!')),
       );
+
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const PatosScreen(),
+          ),
+        );
+      });
 
       _nomeController.clear();
       _emailController.clear();
