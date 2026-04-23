@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'patos_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'home_screen.dart';
 
 class CadastroScreen extends StatefulWidget {
   const CadastroScreen({super.key});
@@ -16,20 +17,25 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final _senhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
 
-  void _enviarFormulario() {
+  Future<void> _salvarSessao() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('meu_token_seguro', 'token_gerado_no_cadastro');
+  }
+
+  void _enviarFormulario() async {
     if (_formKey.currentState!.validate()) {
+      await _salvarSessao(); // Salva token (simula criação de conta)
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Cadastro realizado com sucesso!')),
       );
 
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const PatosScreen(),
-          ),
-        );
-      });
+      // Vai para Home (logado)
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
 
       _nomeController.clear();
       _emailController.clear();
@@ -50,7 +56,6 @@ class _CadastroScreenState extends State<CadastroScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // NOME
               TextFormField(
                 controller: _nomeController,
                 decoration: const InputDecoration(
@@ -64,10 +69,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 16),
-
-              // EMAIL
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -85,10 +87,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 16),
-
-              // SENHA
               TextFormField(
                 controller: _senhaController,
                 obscureText: true,
@@ -106,10 +105,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 16),
-
-              // CONFIRMAR SENHA
               TextFormField(
                 controller: _confirmarSenhaController,
                 obscureText: true,
@@ -124,10 +120,7 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 24),
-
-              // BOTÃO
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
