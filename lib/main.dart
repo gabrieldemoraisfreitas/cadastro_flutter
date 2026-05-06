@@ -1,33 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
 
-void main() async {
-  // Garante que os plugins Flutter estejam inicializados antes de chamar runApp
-  WidgetsFlutterBinding.ensureInitialized();
+import 'screens/usuarios_screen.dart';
 
-  // Lê o token salvo na memória permanente
-  final prefs = await SharedPreferences.getInstance();
-  final String? token = prefs.getString('meu_token_seguro');
-
-  runApp(MyApp(estaLogado: token != null));
+void main() {
+  runApp(const MeuApp());
 }
 
-class MyApp extends StatelessWidget {
-  final bool estaLogado;
-  const MyApp({super.key, required this.estaLogado});
+class MeuApp extends StatelessWidget {
+  const MeuApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Sessão Persistente',
+      title: 'Aula 08 - API REST',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      // Se estiver logado, vai direto para Home; senão, para Login
-      home: estaLogado ? const HomeScreen() : const LoginScreen(),
+      home: const UsuariosScreen(),
     );
   }
 }
