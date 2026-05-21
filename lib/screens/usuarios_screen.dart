@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-
+import '../constants/app_colors.dart';
 import '../models/usuario.dart';
 import '../services/api_service.dart';
 import 'cadastro_usuario_screen.dart';
 import 'detalhes_cliente_screen.dart';
-import 'servico.dart';
+import 'servicos_screen.dart';
 import 'sobre_screen.dart';
 
 class UsuariosScreen extends StatefulWidget {
@@ -15,9 +15,6 @@ class UsuariosScreen extends StatefulWidget {
 }
 
 class _UsuariosScreenState extends State<UsuariosScreen> {
-  static const Color laranja = Color(0xFFFF6B1A);
-  static const Color fundo = Color(0xFFF7F7F2);
-
   final _apiService = ApiService();
   final _buscaController = TextEditingController();
 
@@ -40,20 +37,15 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
 
   List<Usuario> get _usuariosFiltrados {
     final busca = _buscaController.text.trim().toLowerCase();
-
-    if (busca.isEmpty) {
-      return _usuarios;
-    }
-
-    return _usuarios.where((usuario) {
-      return usuario.nome.toLowerCase().contains(busca) ||
-          usuario.cidade.toLowerCase().contains(busca);
+    if (busca.isEmpty) return _usuarios;
+    return _usuarios.where((u) {
+      return u.nome.toLowerCase().contains(busca) ||
+          u.cidade.toLowerCase().contains(busca);
     }).toList();
   }
 
-  int get _totalCidades {
-    return _usuarios.map((usuario) => usuario.cidade).toSet().length;
-  }
+  int get _totalCidades =>
+      _usuarios.map((u) => u.cidade).toSet().length;
 
   Future<void> _buscarUsuarios() async {
     setState(() {
@@ -63,39 +55,23 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
 
     try {
       final usuarios = await _apiService.buscarUsuarios();
-
       if (!mounted) return;
-
-      setState(() {
-        _usuarios = usuarios;
-      });
+      setState(() => _usuarios = usuarios);
     } catch (erro) {
       if (!mounted) return;
-
-      setState(() {
-        _erro = 'Não foi possível carregar os clientes.\n\nErro: $erro';
-      });
+      setState(() => _erro = 'Não foi possível carregar os clientes.\n\nErro: $erro');
     } finally {
-      if (mounted) {
-        setState(() {
-          _carregando = false;
-        });
-      }
+      if (mounted) setState(() => _carregando = false);
     }
   }
 
   Future<void> _abrirCadastro() async {
     final resultado = await Navigator.push<Usuario>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const CadastroUsuarioScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const CadastroUsuarioScreen()),
     );
-
     if (resultado != null) {
-      setState(() {
-        _usuarios.insert(0, resultado);
-      });
+      setState(() => _usuarios.insert(0, resultado));
     }
   }
 
@@ -103,63 +79,46 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
     final removido = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => DetalhesClienteScreen(usuario: usuario),
-      ),
+          builder: (_) => DetalhesClienteScreen(usuario: usuario)),
     );
-
     if (removido == true) {
-      setState(() {
-        _usuarios.removeWhere((item) => item.id == usuario.id);
-      });
+      setState(() => _usuarios.removeWhere((u) => u.id == usuario.id));
     }
   }
 
   Future<void> _confirmarExclusao(Usuario usuario) async {
     final confirmar = await showDialog<bool>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Remover cliente'),
-          content: Text(
-            'Deseja remover ${usuario.nome} da sua lista de clientes?',
+      builder: (context) => AlertDialog(
+        title: const Text('Remover cliente'),
+        content: Text(
+            'Deseja remover ${usuario.nome} da sua lista de clientes?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Remover'),
-            ),
-          ],
-        );
-      },
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remover'),
+          ),
+        ],
+      ),
     );
 
     if (confirmar != true) return;
 
     try {
       await _apiService.deletarUsuario(usuario.id);
-
       if (!mounted) return;
-
-      setState(() {
-        _usuarios.removeWhere((item) => item.id == usuario.id);
-      });
-
+      setState(() => _usuarios.removeWhere((u) => u.id == usuario.id));
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cliente removido com sucesso'),
-        ),
+        const SnackBar(content: Text('Cliente removido com sucesso')),
       );
     } catch (erro) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao remover cliente: $erro'),
-        ),
+        SnackBar(content: Text('Erro ao remover cliente: $erro')),
       );
     }
   }
@@ -169,16 +128,13 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
       _abrirCadastro();
       return;
     }
-
-    setState(() {
-      _abaSelecionada = index;
-    });
+    setState(() => _abaSelecionada = index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: fundo,
+      backgroundColor: AppColors.fundo,
       body: IndexedStack(
         index: _abaSelecionada,
         children: [
@@ -222,9 +178,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
       child: Column(
         children: [
           _buildCabecalho(),
-          Expanded(
-            child: _buildConteudoClientes(),
-          ),
+          Expanded(child: _buildConteudo()),
         ],
       ),
     );
@@ -235,10 +189,8 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: const BoxDecoration(
-        color: laranja,
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(26),
-        ),
+        color: AppColors.laranja,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(26)),
       ),
       child: Row(
         children: [
@@ -249,18 +201,14 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                 Text(
                   'CargaLink ⚡',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 23,
-                    fontWeight: FontWeight.bold,
-                  ),
+                      color: Colors.white,
+                      fontSize: 23,
+                      fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 2),
                 Text(
                   'Clientes de serviço',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ],
             ),
@@ -276,13 +224,13 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
     );
   }
 
-  Widget _buildConteudoClientes() {
+  Widget _buildConteudo() {
     if (_carregando) {
       return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: laranja),
+            CircularProgressIndicator(color: AppColors.laranja),
             SizedBox(height: 16),
             Text('Carregando clientes...'),
           ],
@@ -297,16 +245,9 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.wifi_off,
-                size: 58,
-                color: Colors.red,
-              ),
+              const Icon(Icons.wifi_off, size: 58, color: Colors.red),
               const SizedBox(height: 16),
-              Text(
-                _erro!,
-                textAlign: TextAlign.center,
-              ),
+              Text(_erro!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _buscarUsuarios,
@@ -372,27 +313,19 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0EEE8),
+        color: AppColors.fundoCard,
         borderRadius: BorderRadius.circular(13),
       ),
       child: Column(
         children: [
           Icon(icon, size: 20, color: Colors.grey.shade700),
           const SizedBox(height: 6),
-          Text(
-            valor,
-            style: const TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(valor,
+              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
           Text(
             titulo,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
           ),
         ],
       ),
@@ -458,9 +391,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
               child: Text(
                 _iniciais(usuario.nome),
                 style: TextStyle(
-                  color: corAvatar,
-                  fontWeight: FontWeight.bold,
-                ),
+                    color: corAvatar, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(width: 13),
@@ -473,18 +404,13 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
+                        fontSize: 16, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 14,
-                        color: Colors.grey.shade700,
-                      ),
+                      Icon(Icons.location_on_outlined,
+                          size: 14, color: Colors.grey.shade700),
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
@@ -492,9 +418,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: Colors.grey.shade800,
-                            fontSize: 12,
-                          ),
+                              color: Colors.grey.shade800, fontSize: 12),
                         ),
                       ),
                     ],
@@ -502,9 +426,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                   const SizedBox(height: 7),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 4,
-                    ),
+                        horizontal: 9, vertical: 4),
                     decoration: BoxDecoration(
                       color: corTag.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(999),
@@ -512,10 +434,9 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
                     child: Text(
                       usuario.tipoServico,
                       style: TextStyle(
-                        color: corTag,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 11,
-                      ),
+                          color: corTag,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11),
                     ),
                   ),
                 ],
@@ -540,21 +461,14 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
 
   String _iniciais(String nome) {
     final partes = nome.trim().split(' ');
-
-    if (partes.isEmpty || partes.first.isEmpty) {
-      return '?';
-    }
-
-    if (partes.length == 1) {
-      return partes.first.substring(0, 1).toUpperCase();
-    }
-
+    if (partes.isEmpty || partes.first.isEmpty) return '?';
+    if (partes.length == 1) return partes.first.substring(0, 1).toUpperCase();
     return '${partes.first.substring(0, 1)}${partes.last.substring(0, 1)}'
         .toUpperCase();
   }
 
   Color _corAvatar(int id) {
-    final cores = [
+    const cores = [
       Colors.orange,
       Colors.green,
       Colors.blue,
@@ -562,7 +476,6 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
       Colors.pink,
       Colors.teal,
     ];
-
     return cores[id % cores.length];
   }
 
@@ -579,7 +492,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
       case 'Atendimento comercial':
         return Colors.deepPurple;
       default:
-        return laranja;
+        return AppColors.laranja;
     }
   }
 }

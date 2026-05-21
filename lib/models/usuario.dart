@@ -1,3 +1,5 @@
+import '../constants/app_constants.dart';
+
 class Usuario {
   final int id;
   final String nome;
@@ -7,7 +9,7 @@ class Usuario {
   final String tipoServico;
   final String observacoes;
 
-  Usuario({
+  const Usuario({
     required this.id,
     required this.nome,
     required this.email,
@@ -19,7 +21,6 @@ class Usuario {
 
   factory Usuario.fromJson(Map<String, dynamic> json) {
     final endereco = json['address'];
-
     final id = json['id'] is int ? json['id'] as int : 0;
 
     return Usuario(
@@ -36,34 +37,21 @@ class Usuario {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': nome,
-      'email': email,
-      'address': {
-        'city': cidade,
-      },
-      'phone': telefone,
-      'tipoServico': tipoServico,
-      'observacoes': observacoes,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': nome,
+        'email': email,
+        'address': {'city': cidade},
+        'phone': telefone,
+        'tipoServico': tipoServico,
+        'observacoes': observacoes,
+      };
 
   static String _telefonePadrao(int id) {
-    final numero = id.toString().padLeft(4, '0');
-    return '(19) 99999-$numero';
+    return '(19) 99999-${id.toString().padLeft(4, '0')}';
   }
 
   static String _tipoServicoPadrao(int id) {
-    const tipos = [
-      'Carga e descarga',
-      'Entrega rápida',
-      'Cliente recorrente',
-      'Contato novo',
-      'Atendimento comercial',
-    ];
-
-    return tipos[id % tipos.length];
+    return AppConstants.tiposServico[id % AppConstants.tiposServico.length];
   }
 }

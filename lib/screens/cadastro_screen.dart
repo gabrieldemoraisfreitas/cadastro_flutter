@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
 import 'home_screen.dart';
 
 class CadastroScreen extends StatefulWidget {
@@ -10,6 +10,7 @@ class CadastroScreen extends StatefulWidget {
 }
 
 class _CadastroScreenState extends State<CadastroScreen> {
+  final _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
 
   final _nomeController = TextEditingController();
@@ -17,39 +18,36 @@ class _CadastroScreenState extends State<CadastroScreen> {
   final _senhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
 
-  Future<void> _salvarSessao() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('meu_token_seguro', 'token_gerado_no_cadastro');
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _emailController.dispose();
+    _senhaController.dispose();
+    _confirmarSenhaController.dispose();
+    super.dispose();
   }
 
   void _enviarFormulario() async {
-    if (_formKey.currentState!.validate()) {
-      await _salvarSessao(); // Salva token (simula criação de conta)
+    if (!_formKey.currentState!.validate()) return;
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cadastro realizado com sucesso!')),
-      );
+    await _authService.salvarSessao('token_gerado_no_cadastro');
 
-      // Vai para Home (logado)
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+    if (!mounted) return;
 
-      _nomeController.clear();
-      _emailController.clear();
-      _senhaController.clear();
-      _confirmarSenhaController.clear();
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Cadastro realizado com sucesso!')),
+    );
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cadastro'),
-      ),
+      appBar: AppBar(title: const Text('Cadastro')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -62,12 +60,8 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   labelText: 'Nome',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Campo obrigatório';
-                  }
-                  return null;
-                },
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -77,13 +71,9 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   labelText: 'E-mail',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Digite seu e-mail';
-                  }
-                  if (!value.contains('@')) {
-                    return 'E-mail inválido';
-                  }
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Digite seu e-mail';
+                  if (!v.contains('@')) return 'E-mail inválido';
                   return null;
                 },
               ),
@@ -95,13 +85,9 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   labelText: 'Senha',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Digite uma senha';
-                  }
-                  if (value.length < 6) {
-                    return 'A senha deve ter pelo menos 6 caracteres';
-                  }
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Digite uma senha';
+                  if (v.length < 6) return 'Mínimo 6 caracteres';
                   return null;
                 },
               ),
@@ -113,12 +99,8 @@ class _CadastroScreenState extends State<CadastroScreen> {
                   labelText: 'Confirmar senha',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) {
-                  if (value != _senhaController.text) {
-                    return 'As senhas não coincidem';
-                  }
-                  return null;
-                },
+                validator: (v) =>
+                    v != _senhaController.text ? 'As senhas não coincidem' : null,
               ),
               const SizedBox(height: 24),
               SizedBox(

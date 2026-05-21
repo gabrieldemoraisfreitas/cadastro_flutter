@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-
+import '../constants/app_colors.dart';
+import '../constants/app_constants.dart';
 import '../models/usuario.dart';
 import '../services/api_service.dart';
+import '../widgets/widgets.dart';
 
 class CadastroUsuarioScreen extends StatefulWidget {
   const CadastroUsuarioScreen({super.key});
@@ -12,8 +14,8 @@ class CadastroUsuarioScreen extends StatefulWidget {
 
 class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
   final _apiService = ApiService();
-
   final _formKey = GlobalKey<FormState>();
+
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _cidadeController = TextEditingController();
@@ -22,14 +24,6 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
 
   String? _tipoServicoSelecionado;
   bool _salvando = false;
-
-  final List<String> _tiposServico = const [
-    'Carga e descarga',
-    'Entrega rápida',
-    'Cliente recorrente',
-    'Contato novo',
-    'Atendimento comercial',
-  ];
 
   @override
   void dispose() {
@@ -41,12 +35,15 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
     super.dispose();
   }
 
+  String? _validarObrigatorio(String? value, String campo) {
+    if (value == null || value.trim().isEmpty) return 'Informe $campo';
+    return null;
+  }
+
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _salvando = true;
-    });
+    setState(() => _salvando = true);
 
     final usuario = Usuario(
       id: 0,
@@ -61,49 +58,28 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
     );
 
     try {
-      final usuarioCriado = await _apiService.criarUsuario(usuario);
-
+      final criado = await _apiService.criarUsuario(usuario);
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cliente cadastrado com sucesso'),
-        ),
+        const SnackBar(content: Text('Cliente cadastrado com sucesso')),
       );
-
-      Navigator.pop(context, usuarioCriado);
+      Navigator.pop(context, criado);
     } catch (erro) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao cadastrar cliente: $erro'),
-        ),
+        SnackBar(content: Text('Erro ao cadastrar cliente: $erro')),
       );
     } finally {
-      if (mounted) {
-        setState(() {
-          _salvando = false;
-        });
-      }
+      if (mounted) setState(() => _salvando = false);
     }
-  }
-
-  String? _validarObrigatorio(String? value, String campo) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Informe $campo';
-    }
-    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    const laranja = Color(0xFFFF6B1A);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Novo cliente'),
-        backgroundColor: laranja,
+        backgroundColor: AppColors.laranja,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -112,44 +88,42 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
           key: _formKey,
           child: Column(
             children: [
-              _campoTexto(
+              CampoTexto(
                 controller: _nomeController,
                 label: 'Nome do cliente',
                 icon: Icons.person_outline,
-                validator: (value) => _validarObrigatorio(value, 'o nome'),
+                enabled: !_salvando,
+                validator: (v) => _validarObrigatorio(v, 'o nome'),
               ),
               const SizedBox(height: 14),
-              _campoTexto(
+              CampoTexto(
                 controller: _emailController,
                 label: 'E-mail',
                 icon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Informe o e-mail';
-                  }
-
-                  if (!value.contains('@')) {
-                    return 'E-mail inválido';
-                  }
-
+                enabled: !_salvando,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Informe o e-mail';
+                  if (!v.contains('@')) return 'E-mail inválido';
                   return null;
                 },
               ),
               const SizedBox(height: 14),
-              _campoTexto(
+              CampoTexto(
                 controller: _cidadeController,
                 label: 'Cidade',
                 icon: Icons.location_on_outlined,
-                validator: (value) => _validarObrigatorio(value, 'a cidade'),
+                enabled: !_salvando,
+                validator: (v) => _validarObrigatorio(v, 'a cidade'),
               ),
               const SizedBox(height: 14),
-              _campoTexto(
+              CampoTexto(
                 controller: _telefoneController,
                 label: 'Telefone / WhatsApp',
                 icon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
-                validator: (value) => _validarObrigatorio(value, 'o telefone'),
+                enabled: !_salvando,
+                validator: (v) => _validarObrigatorio(v, 'o telefone'),
               ),
               const SizedBox(height: 14),
               DropdownButtonFormField<String>(
@@ -159,30 +133,20 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                   prefixIcon: Icon(Icons.work_outline),
                   border: OutlineInputBorder(),
                 ),
-                items: _tiposServico.map((tipo) {
-                  return DropdownMenuItem(
-                    value: tipo,
-                    child: Text(tipo),
-                  );
-                }).toList(),
+                items: AppConstants.tiposServico
+                    .map((tipo) => DropdownMenuItem(value: tipo, child: Text(tipo)))
+                    .toList(),
                 onChanged: _salvando
                     ? null
-                    : (value) {
-                        setState(() {
-                          _tipoServicoSelecionado = value;
-                        });
-                      },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Selecione o tipo de serviço';
-                  }
-                  return null;
-                },
+                    : (value) => setState(() => _tipoServicoSelecionado = value),
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Selecione o tipo de serviço' : null,
               ),
               const SizedBox(height: 14),
               TextFormField(
                 controller: _observacoesController,
                 maxLines: 4,
+                enabled: !_salvando,
                 decoration: const InputDecoration(
                   labelText: 'Observações',
                   alignLabelWithHint: true,
@@ -191,49 +155,17 @@ class _CadastroUsuarioScreenState extends State<CadastroUsuarioScreen> {
                 ),
               ),
               const SizedBox(height: 22),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _salvando ? null : _salvar,
-                  icon: _salvando
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save_outlined),
-                  label: Text(_salvando ? 'Salvando...' : 'Salvar cliente'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: laranja,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
+              BotaoPrimario(
+                label: 'Salvar cliente',
+                icon: Icons.save_outlined,
+                onPressed: _salvar,
+                carregando: _salvando,
+                labelCarregando: 'Salvando...',
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _campoTexto({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required String? Function(String?) validator,
-    TextInputType? keyboardType,
-  }) {
-    return TextFormField(
-      controller: controller,
-      enabled: !_salvando,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
-      ),
-      validator: validator,
     );
   }
 }

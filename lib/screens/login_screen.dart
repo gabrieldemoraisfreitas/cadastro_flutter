@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'cadastro_screen.dart';
@@ -13,38 +12,37 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
-  bool _carregando = false;
-
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
+  bool _carregando = false;
 
-  // Salva o token no SharedPreferences
-  Future<void> _salvarSessao(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('meu_token_seguro', token);
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _senhaController.dispose();
+    super.dispose();
   }
 
   void _executarLogin() async {
     setState(() => _carregando = true);
 
-    String? token = await _authService.login(
+    final token = await _authService.login(
       _emailController.text,
       _senhaController.text,
     );
 
     setState(() => _carregando = false);
 
-    if (token != null) {
-      await _salvarSessao(token); // Grava token
+    if (!mounted) return;
 
+    if (token != null) {
+      await _authService.salvarSessao(token);
       if (!mounted) return;
-      // Vai para Home e remove a tela de login da pilha
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('E-mail ou senha inválidos')),
       );
@@ -56,26 +54,26 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
               controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'E-mail',
                 border: OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _senhaController,
+              obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Senha',
                 border: OutlineInputBorder(),
               ),
-              obscureText: true,
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -95,12 +93,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CadastroScreen()),
-                );
-              },
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CadastroScreen()),
+              ),
               child: const Text('Não tem conta? Cadastre-se'),
             ),
           ],

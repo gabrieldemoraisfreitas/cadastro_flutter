@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'constants/app_colors.dart';
 import 'screens/usuarios_screen.dart';
 
 void main() {
@@ -9,8 +9,6 @@ void main() {
 class MeuApp extends StatelessWidget {
   const MeuApp({super.key});
 
-  static const Color laranjaPrincipal = Color(0xFFFF6B1A);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -18,11 +16,11 @@ class MeuApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: laranjaPrincipal,
-          primary: laranjaPrincipal,
+          seedColor: AppColors.laranja,
+          primary: AppColors.laranja,
         ),
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF7F7F2),
+        scaffoldBackgroundColor: AppColors.fundo,
       ),
       home: const UsuariosScreen(),
     );

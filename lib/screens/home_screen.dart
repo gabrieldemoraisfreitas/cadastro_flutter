@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   Future<void> _logout(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('meu_token_seguro'); // Remove o token salvo
+    await AuthService().encerrarSessao();
 
-    // Navega de volta para a tela de login, removendo todas as telas anteriores
     if (!context.mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
@@ -23,7 +21,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
-        automaticallyImplyLeading: false, // Remove a seta de voltar
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
