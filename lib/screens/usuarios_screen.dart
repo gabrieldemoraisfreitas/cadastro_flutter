@@ -4,6 +4,7 @@ import '../models/usuario.dart';
 import '../services/api_service.dart';
 import 'cadastro_usuario_screen.dart';
 import 'detalhes_cliente_screen.dart';
+import 'localizacao_screen.dart';
 import 'nivel_digital_screen.dart';
 import 'perfil_foto_screen.dart';
 import 'servicos_screen.dart';
@@ -146,6 +147,7 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
           const SobreScreen(),
           const PerfilComFotoPage(),
           const NivelDigitalPage(),
+          const LocalizacaoPage(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -181,6 +183,11 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
             icon: Icon(Icons.sensors_outlined),
             selectedIcon: Icon(Icons.sensors),
             label: 'Sensor',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.location_on_outlined),
+            selectedIcon: Icon(Icons.location_on),
+            label: 'GPS',
           ),
         ],
       ),
