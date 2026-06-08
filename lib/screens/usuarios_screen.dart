@@ -3,8 +3,10 @@ import '../constants/app_colors.dart';
 import '../models/usuario.dart';
 import '../services/api_service.dart';
 import 'cadastro_usuario_screen.dart';
+import 'chat_eco_screen.dart';
 import 'detalhes_cliente_screen.dart';
 import 'localizacao_screen.dart';
+import 'mapa_checkin_screen.dart';
 import 'nivel_digital_screen.dart';
 import 'perfil_foto_screen.dart';
 import 'servicos_screen.dart';
@@ -148,6 +150,8 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
           const PerfilComFotoPage(),
           const NivelDigitalPage(),
           const LocalizacaoPage(),
+          const MapaCheckinPage(),
+          const ChatEcoPage(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -188,6 +192,16 @@ class _UsuariosScreenState extends State<UsuariosScreen> {
             icon: Icon(Icons.location_on_outlined),
             selectedIcon: Icon(Icons.location_on),
             label: 'GPS',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map),
+            label: 'Mapa',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.forum_outlined),
+            selectedIcon: Icon(Icons.forum),
+            label: 'Tempo Real',
           ),
         ],
       ),
